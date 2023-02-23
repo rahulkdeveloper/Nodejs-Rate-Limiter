@@ -34,6 +34,8 @@ exports.loginAndSignup = async(request,response)=>{
             let token = await jwt.sign((existUser._id).toString(),process.env.SECRETCODE);
 
             if(token){
+                existUser.password = undefined
+                existUser.salt = undefined
                 return response.status(200).json({
                     success:true,
                     message:"successfully login",
@@ -77,6 +79,8 @@ exports.loginAndSignup = async(request,response)=>{
             let token = await jwt.sign((saveUser._id).toString(),process.env.SECRETCODE);
 
             if(token){
+                saveUser.password = undefined
+                saveUser.salt = undefined
                 return response.status(200).json({
                     success:true,
                     message:"successfully register",
