@@ -2,6 +2,7 @@ const { request, response } = require("express");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../model/user");
+const rateLimit = require("express-rate-limit");
 
 exports.auth = async(request,response,next)=>{
     try {
@@ -17,10 +18,9 @@ exports.auth = async(request,response,next)=>{
             })
         }
 
-        let res = await jwt.verify(token,process.env.SECRETCODE);
-
-       
-
+        let res = await jwt.verify(token,process.env.JWT_SECRET);
+        
+        
         if(!res){
             return response.status(403).json({
                 success:false,
@@ -28,7 +28,7 @@ exports.auth = async(request,response,next)=>{
             })
         }
 
-        let userFound = await User.findOne({_id:res}).lean();
+        let userFound = await User.findOne({_id:res._id}).lean();
 
         if(!userFound){
             return response.status(403).json({
@@ -36,23 +36,31 @@ exports.auth = async(request,response,next)=>{
                 message:"Acccess Denied"
             })
         }
+       
 
-        if(userFound.email != process.env.ADMIN_EMAIL){
-            return response.status(403).json({
-                success:false,
-                message:"Acccess Denied"
-            })
-        }
+        request.userData = userFound;
+
+        
 
         next()
         
     } catch (error) {
-        console.log("error",error);
+      
         return response.status(500).json({
             success:false,
-            message:error.message
+            message:"please login"
         })
     }
 }
+
+
+
+exports.limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, 
+	max: 10,
+	standardHeaders: true, 
+	legacyHeaders: false, 
+})
+
 
 
